@@ -10,8 +10,27 @@
     "./client": "./src/client.ts",
     "./verify": "./src/verify.ts"
   },
-  "keywords": ["solana", "agent-auth", "siws", "better-auth", "clawd"],
+  "keywords": ["solana", "agent-auth", "siws", "better-auth", "clawd", "caap", "das", "metaplex", "helius"],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Solizardking/agent-auth.git",
+    "directory": "packages/agent-auth-solana"
+  },
+  "homepage": "https://x402.wtf/agentauth",
+  "bugs": {
+    "url": "https://github.com/Solizardking/agent-auth/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "SKILL.md"
+  ],
   "peerDependencies": {
     "better-auth": ">=1.5.0",
     "better-auth-solana": ">=1.0.0"

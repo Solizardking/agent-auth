@@ -7,3 +7,5 @@ dist/
 .env.local
 .DS_Store
 *.log
+# never commit a real .npmrc with token values
+.npmrc.local
