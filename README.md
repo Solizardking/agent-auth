@@ -339,6 +339,25 @@ cd apps/relay && cp .env.example .env && pnpm dev
 
 ---
 
+## Skill Catalog
+
+This project is registered in the **[Clawd Skill Hub](https://x402.wtf/skills)** as `pay-sh` — discoverable by AI agents and human developers browsing the Solana agent ecosystem.
+
+| Catalog File | Description |
+|-------------|-------------|
+| [`skills/pay-sh/SKILL.md`](https://x402.wtf/api/skills/pay-sh) | Full skill documentation — SIWS, CAAP/1.0, Clerk+TEE flow, subscription tiers |
+| `public/api/skills/catalog.json` | Catalog registry entry under `"Solana / Blockchain"` |
+| `public/api/skills/index.json` | Index entry with tags, URL, homepage, and attestation metadata |
+| [`packages/clerk-caap/SKILL.md`](packages/clerk-caap/SKILL.md) | Standalone `@clawd/clerk-caap` package skill reference |
+
+The skill hub powers agent-native discovery: any AI agent with Clawd tooling can find the **pay.sh Agent Auth** service and call it directly — no prior registration required.
+
+**Skill URL:** `https://x402.wtf/api/skills/pay-sh`  
+**Homepage:** `https://pay.sh/services/auth/agent`  
+**Category:** Solana / Blockchain
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
