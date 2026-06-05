@@ -1,0 +1,40 @@
+{
+  "name": "clawd-agent-auth-relay",
+  "version": "1.0.0",
+  "description": "Clawd CAAP/1.0 confidential relay — Clerk + Solana SIWS + Phala TEE attestation",
+  "tee": {
+    "provider": "phala-dstack",
+    "platform": "intel-tdx",
+    "gpuType": "nvidia-h100",
+    "explorerBase": "https://proof.t16z.com",
+    "tappdEndpoint": "http://tproxy:8090"
+  },
+  "clerk": {
+    "frontendApi": "https://relaxing-collie-65.clerk.accounts.dev",
+    "publishableKey": "pk_live_cmVsYXhpbmctY29sbGllLTY1LmNsZXJrLmFjY291bnRzLmRldg",
+    "instanceId": "relaxing-collie-65",
+    "signIn": "https://relaxing-collie-65.accounts.dev/sign-in",
+    "signUp": "https://relaxing-collie-65.accounts.dev/sign-up",
+    "waitlist": "https://relaxing-collie-65.accounts.dev/waitlist",
+    "unauthorizedSignIn": "https://relaxing-collie-65.accounts.dev/unauthorized-sign-in"
+  },
+  "caap": {
+    "version": "1.0",
+    "protocol": "CAAP/1.0",
+    "clawdMint": "8cHzQHUS2s2h8TzCmfqPKYiM4dSt4roa3n7MyRLApump",
+    "tiers": {
+      "free": 0,
+      "bronze": 100000,
+      "silver": 500000,
+      "gold": 1000000,
+      "diamond": 5000000
+    }
+  },
+  "endpoints": {
+    "discovery": "GET /api/caap/discovery",
+    "attest": "POST /api/caap/attest",
+    "siwsChallenge": "POST /api/siws/challenge",
+    "siwsVerify": "POST /api/siws/verify",
+    "teeReport": "GET /api/tee/report"
+  }
+}

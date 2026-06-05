@@ -5,6 +5,16 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { authClient } from "@/lib/auth-client";
 
+const CLERK_SIGN_IN = "https://relaxing-collie-65.accounts.dev/sign-in";
+
+function SolanaIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M4.03 16.5a.75.75 0 0 1 .53-.22h15.19a.375.375 0 0 1 .265.64l-2.34 2.34a.75.75 0 0 1-.53.22H1.95a.375.375 0 0 1-.265-.64l2.34-2.34zm0-11.78A.75.75 0 0 1 4.56 4.5h15.19a.375.375 0 0 1 .265.64L17.68 7.48a.75.75 0 0 1-.53.22H1.95a.375.375 0 0 1-.265-.64l2.34-2.34zM17.15 10.86a.75.75 0 0 0-.53-.22H1.43a.375.375 0 0 0-.265.64l2.34 2.34a.75.75 0 0 0 .53.22h15.19a.375.375 0 0 0 .265-.64l-2.34-2.34z" />
+    </svg>
+  );
+}
+
 function GitHubIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
@@ -115,6 +125,20 @@ function SignInForm() {
           <GitHubIcon className="h-4 w-4" />
           Continue with GitHub
         </button>
+
+        <a
+          href={
+            hasOAuthQuery
+              ? `${CLERK_SIGN_IN}?redirect_url=${encodeURIComponent(
+                  `/api/auth/oauth2/authorize?${new URLSearchParams(searchParams.toString())}`,
+                )}`
+              : CLERK_SIGN_IN
+          }
+          className="w-full flex items-center justify-center gap-2 border border-violet-500/40 bg-violet-500/[0.06] hover:bg-violet-500/[0.12] px-4 py-2.5 text-sm font-medium text-violet-300 transition-colors"
+        >
+          <SolanaIcon className="h-4 w-4" />
+          Continue with Clerk + Solana
+        </a>
 
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px bg-foreground/[0.08]" />

@@ -14,7 +14,14 @@
         "STRIPE_CONNECT_CLIENT_ID",
         "MPP_SECRET_KEY",
         "STRIPE_AGENTS_URL",
-        "ADMIN_EMAILS"
+        "ADMIN_EMAILS",
+        "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+        "CLERK_SECRET_KEY",
+        "CLERK_JWT_KEY",
+        "HELIUS_API_KEY",
+        "CLAWD_TOKEN_ADDRESS",
+        "DSTACK_SIMULATOR_ENDPOINT",
+        "RELAY_DOMAIN"
       ]
     },
     "typecheck": {

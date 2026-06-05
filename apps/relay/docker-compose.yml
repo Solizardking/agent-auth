@@ -1,0 +1,55 @@
+# Phala dstack deployment — Clawd Auth Relay confidential compute
+# Deploy with: phala deploy --compose docker-compose.yml
+#
+# This compose file is designed to run inside a Phala TEE CVM (Intel TDX).
+# The tproxy sidecar provides the tappd socket for TDX quote generation,
+# which the relay uses in /api/tee/report and /api/caap/attest.
+
+version: "3.8"
+
+services:
+  relay:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: clawdbrowser/agent-auth-relay:latest
+    restart: unless-stopped
+    ports:
+      - "3333:3333"
+    environment:
+      - NODE_ENV=production
+      - PORT=3333
+      # Phala tappd endpoint (injected by dstack runtime)
+      - DSTACK_SIMULATOR_ENDPOINT=http://tproxy:8090
+      # Clerk
+      - NEXT_PUBLIC_CLERK_FRONTEND_API=https://relaxing-collie-65.clerk.accounts.dev
+      - NEXT_PUBLIC_CLERK_SIGN_IN_URL=https://relaxing-collie-65.accounts.dev/sign-in
+      - NEXT_PUBLIC_CLERK_SIGN_UP_URL=https://relaxing-collie-65.accounts.dev/sign-up
+      # Solana / CAAP
+      - HELIUS_API_KEY=${HELIUS_API_KEY}
+      - CLAWD_TOKEN_ADDRESS=8cHzQHUS2s2h8TzCmfqPKYiM4dSt4roa3n7MyRLApump
+      - RELAY_DOMAIN=${RELAY_DOMAIN:-relay.clawd.xyz}
+    secrets:
+      - clerk_secret_key
+      - clerk_jwt_key
+    depends_on:
+      - tproxy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3333/api/caap/discovery"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Phala dstack tappd proxy — provides TDX quote generation inside the TEE.
+  # In production this is the dstack-provided socket; in local dev use the simulator.
+  tproxy:
+    image: phalanetwork/tappd-simulator:latest
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+
+secrets:
+  clerk_secret_key:
+    environment: CLERK_SECRET_KEY
+  clerk_jwt_key:
+    environment: CLERK_JWT_KEY
