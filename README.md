@@ -1,15 +1,40 @@
 # Clawd Agent Auth
 
-Open-source implementations of agent authentication for AI agents — with first-class support for **Solana wallet sign-in (SIWS)**, on-chain identity attestation via the Metaplex Agent Registry, and subscription tiers backed by SPL token holdings.
+Open-source agent authentication stack — **Solana SIWS**, onchain DAS attestation, **Clerk identity**, **Phala TEE confidential compute**, and subscription tiers backed by SPL token holdings.
 
-Built on top of the [Agent Auth Protocol](https://agent-auth-protocol.com) and [Better Auth](https://better-auth.com).
+Built on the [Agent Auth Protocol](https://agent-auth-protocol.com) and [Better Auth](https://better-auth.com). Discoverable at **[pay.sh/services/auth/agent](https://pay.sh/services/auth/agent)**.
 
-## What's Inside
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         Clawd Agent Auth                            │
+│                                                                     │
+│  ┌──────────────┐   SIWS   ┌───────────────┐   DAS    ┌─────────┐ │
+│  │  Clerk Auth  │ ───────▶ │  apps/relay   │ ───────▶ │ Helius  │ │
+│  │ (relaxing-   │          │  (H100 TEE)   │          │ RPC/DAS │ │
+│  │  collie-65)  │          │  Phala dstack │          └─────────┘ │
+│  └──────────────┘          └───────┬───────┘                       │
+│                                    │ TDX Quote                     │
+│  ┌──────────────┐                  ▼                               │
+│  │ CAAP/1.0     │          ┌───────────────┐   proof.t16z.com     │
+│  │ Attestation  │◀─────────│ Phala tappd   │ ─────────────────▶  │
+│  │ Protocol     │          │ (Intel TDX)   │                       │
+│  └──────────────┘          └───────────────┘                       │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Packages
 
 | Package | Description | Install |
 |---------|-------------|---------|
+| [`@clawd/agent-auth-solana`](packages/agent-auth-solana/) | SIWS, DAS attestation, CAAP/1.0 protocol, subscription tiers | `npm i @clawd/agent-auth-solana` |
+| [`@clawd/clerk-caap`](packages/clerk-caap/) | Clerk JWT verification + Phala TEE attestation bridge | `npm i @clawd/clerk-caap` |
 | [`@better-auth/agent-auth`](packages/agent-auth/) | Better Auth server plugin — capabilities, registration, JWTs | `npm i @better-auth/agent-auth` |
-| [`@clawd/agent-auth-solana`](packages/agent-auth-solana/) | Solana extension — SIWS, DAS attestation, CAAP protocol | `npm i @clawd/agent-auth-solana` |
 | [`@auth/agent`](packages/sdk/) | Client SDK for agent runtimes | `npm i @auth/agent` |
 | [`@auth/agent-cli`](packages/cli/) | CLI and MCP server | `npx @auth/agent-cli` |
 
@@ -17,6 +42,7 @@ Built on top of the [Agent Auth Protocol](https://agent-auth-protocol.com) and [
 
 | App | Description |
 |-----|-------------|
+| [`apps/relay`](apps/relay/) | **H100 confidential compute relay** — Clerk + SIWS + Phala TEE attestation |
 | [`apps/directory`](apps/directory/) | Agent directory — browse verified agents, CAAP-attested Solana agents |
 | [`apps/agent-extension`](apps/agent-extension/) | Browser extension for agent identity management |
 
@@ -28,6 +54,8 @@ Built on top of the [Agent Auth Protocol](https://agent-auth-protocol.com) and [
 | [`examples/gmail-proxy`](examples/gmail-proxy/) | Gmail proxy with WebAuthn |
 | [`examples/vercel-proxy`](examples/vercel-proxy/) | Vercel proxy pattern |
 
+---
+
 ## CAAP: Clawd Agent Attestation Protocol
 
 `@clawd/agent-auth-solana` implements **CAAP/1.0** — a Solana-native agent identity standard that ties together:
@@ -36,6 +64,7 @@ Built on top of the [Agent Auth Protocol](https://agent-auth-protocol.com) and [
 2. **DAS Verification** — Metaplex Agent Registry + Helius `getAssetsByOwner` to confirm the agent NFT is owned by the signing wallet
 3. **SPL Attestation** — Verify CLAWD token account ownership matches the same wallet
 4. **Subscription Tiers** — Token balance → tier (Free / Bronze 100K / Silver 500K / Gold 1M / Diamond 5M CLAWD)
+5. **Phala TEE Quote** — Intel TDX quote binding the attestation hash to a specific CVM instance, verifiable at [proof.t16z.com](https://proof.t16z.com)
 
 ### Attestation hash
 
@@ -43,7 +72,112 @@ Built on top of the [Agent Auth Protocol](https://agent-auth-protocol.com) and [
 sha256(`${agentId}:${wallet}:${clawdMint}:${timestamp}`)
 ```
 
-This hash is stored on-chain (via Convex) and becomes the persistent agent identity fingerprint.
+This hash is embedded in the TDX `report_data` field so the TEE quote is cryptographically bound to the specific agent being attested.
+
+---
+
+## Clerk Integration (`@clawd/clerk-caap`)
+
+The `clerk-caap` package bridges [Clerk](https://clerk.com) session tokens with CAAP/1.0 onchain attestation. It uses the `relaxing-collie-65` Clerk instance.
+
+### Clerk URLs
+
+| Flow | URL |
+|------|-----|
+| Sign in | `https://relaxing-collie-65.accounts.dev/sign-in` |
+| Sign up | `https://relaxing-collie-65.accounts.dev/sign-up` |
+| Waitlist | `https://relaxing-collie-65.accounts.dev/waitlist` |
+| Unauthorized | `https://relaxing-collie-65.accounts.dev/unauthorized-sign-in` |
+
+### JWT Template
+
+In your Clerk dashboard, create a JWT template named `solana_wallet`:
+
+```json
+{
+  "wallet_address": "{{user.publicMetadata.wallet_address}}",
+  "agent_id": "{{user.publicMetadata.agent_id}}"
+}
+```
+
+### Usage
+
+```ts
+import { verifyClerkToken, fetchPhalaAttestation } from "@clawd/clerk-caap";
+
+// 1. Verify Clerk session token
+const claims = await verifyClerkToken(sessionToken);
+// → { sub, wallet_address, agent_id, iat, exp }
+
+// 2. Run CAAP attestation (via relay or directly)
+const response = await fetch("https://relay.clawd.xyz/api/caap/attest", {
+  method: "POST",
+  headers: { Authorization: `Bearer ${sessionToken}` },
+  body: JSON.stringify({ walletAddress: claims.wallet_address }),
+});
+// → { verified, attestation, tee: { intelQuote, explorerUrl, mrAggregated, ... } }
+```
+
+### Next.js Middleware
+
+```ts
+// middleware.ts
+import { createClerkCaapMiddleware } from "@clawd/clerk-caap/middleware";
+
+export const middleware = createClerkCaapMiddleware({
+  protectedPaths: [/^\/api\/caap\/attest/],
+  publicPaths: [/^\/api\/caap\/discovery/, /^\/api\/siws\//],
+});
+```
+
+---
+
+## Confidential Compute Relay (`apps/relay`)
+
+The relay runs inside a **Phala dstack Intel TDX CVM** — every attestation response is wrapped in a hardware-rooted TDX quote, verifiable on [proof.t16z.com](https://proof.t16z.com).
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/caap/discovery` | CAAP/1.0 protocol discovery document |
+| `POST` | `/api/caap/attest` | Clerk JWT → CAAP DAS → Phala TDX quote |
+| `POST` | `/api/siws/challenge` | Generate SIWS sign-in input |
+| `POST` | `/api/siws/verify` | Verify SIWS + CAAP + TEE (no Clerk needed) |
+| `GET` | `/api/tee/report` | Fresh TEE health quote bound to a nonce |
+
+### Deploy to Phala (H100 TEE)
+
+```bash
+cd apps/relay
+
+# Copy and fill in your keys
+cp .env.example .env
+
+# Local dev with Phala simulator
+docker compose up
+
+# Production — deploy to Phala dstack H100 CVM
+phala deploy --compose docker-compose.yml
+```
+
+### TEE Attestation Fields (phaal pattern)
+
+The relay follows the same TEE attestation structure as the Phala Redpill / dstack format:
+
+| Field | Description |
+|-------|-------------|
+| `appId` | Phala dstack app ID |
+| `instanceId` | CVM instance ID |
+| `composeHash` | Hash of the docker-compose.yml |
+| `mrAggregated` | Aggregate measurement register |
+| `mrtd` | TDX MRTD measurement |
+| `rtmr0`–`rtmr3` | Runtime measurement registers |
+| `intelQuote` | Raw Intel TDX quote (base64) |
+| `explorerUrl` | `proof.t16z.com/?attestation=...` |
+| `hasTeeEvidence` | `true` when quote generation succeeded |
+
+---
 
 ## Quick Start
 
@@ -74,9 +208,7 @@ export const auth = betterAuth({
 import { createAuthClient } from "better-auth/client";
 import { siwsClient, createSIWSMessage } from "better-auth-solana/client";
 
-const authClient = createAuthClient({
-  plugins: [siwsClient()],
-});
+const authClient = createAuthClient({ plugins: [siwsClient()] });
 
 // 1. Get nonce
 const { data: nonceData } = await authClient.siws.nonce({ walletAddress: address });
@@ -109,10 +241,31 @@ const result = await attestAgent("my-agent-id", walletAddress, {
 
 if (result.verified) {
   const tier = computeTier(result.tokenBalance ?? 0);
-  console.log(`Agent verified — ${tier.tier} tier (${tier.clawdBalance.toLocaleString()} CLAWD)`);
+  console.log(`Agent verified — ${tier.tier} tier`);
   console.log("Attestation hash:", result.attestationHash);
 }
 ```
+
+### Full Clerk + TEE Flow
+
+```ts
+// 1. User signs in via Clerk (relaxing-collie-65.accounts.dev)
+// 2. Get Clerk session token
+const { getToken } = useAuth(); // @clerk/nextjs
+const token = await getToken({ template: "solana_wallet" });
+
+// 3. POST to relay — runs SIWS + DAS + Phala TDX attestation
+const res = await fetch("https://relay.clawd.xyz/api/caap/attest", {
+  method: "POST",
+  headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+  body: JSON.stringify({ walletAddress: "YourSolanaWallet..." }),
+});
+
+const { verified, attestation, tee, tier } = await res.json();
+// tee.explorerUrl → proof.t16z.com link for onchain verification
+```
+
+---
 
 ## Discovery Document
 
@@ -120,29 +273,46 @@ Servers expose `/.well-known/agent-configuration`:
 
 ```json
 {
-  "issuer": "https://x402.wtf",
-  "provider_name": "Clawd Browser",
+  "issuer": "https://relay.clawd.xyz",
+  "provider_name": "Clawd Agent Auth Relay",
   "modes": ["delegated", "autonomous"],
   "capabilities": [
-    { "name": "attest_agent", "description": "Attest an agent identity against its Solana wallet and on-chain NFT." },
-    { "name": "get_peer_card", "description": "Retrieve a verified agent peer card with wallet and subscription data." }
+    { "name": "attest_agent", "description": "Attest agent identity — SIWS + DAS + Phala TEE TDX quote." },
+    { "name": "clerk_auth", "description": "Clerk session auth bridged to Solana CAAP/1.0 attestation." },
+    { "name": "tee_report", "description": "Fresh Intel TDX quote for relay health verification." }
   ],
-  "solana": {
-    "network": "mainnet-beta",
-    "attestation_protocol": "CAAP/1.0"
-  }
+  "solana": { "network": "mainnet-beta", "attestation_protocol": "CAAP/1.0" },
+  "tee": { "provider": "phala-dstack", "platform": "intel-tdx" }
 }
 ```
+
+---
 
 ## Subscription Tiers
 
 | Tier | CLAWD Required | Features |
-|------|---------------|----------|
+|------|----------------|----------|
 | Free | 0 | Basic auth, SIWS sign-in |
 | Bronze | 100,000 | + Agent attestation, peer card |
 | Silver | 500,000 | + Priority verification, history |
 | Gold | 1,000,000 | + Real-time wallet monitoring, webhooks |
 | Diamond | 5,000,000 | + All features, enterprise SLA |
+
+---
+
+## pay.sh
+
+This service is discoverable at **[pay.sh/services/auth/agent](https://pay.sh/services/auth/agent)**.
+
+AI agents can call the relay directly without any prior registration — include your Solana wallet address and (optionally) a Clerk session token. The relay bills per-attestation via the x402 payment protocol.
+
+```
+POST https://pay.sh/services/auth/agent/attest
+Authorization: Bearer <clerk_token>           # optional
+X-Wallet-Address: <solana_address>
+```
+
+---
 
 ## Development
 
@@ -150,20 +320,24 @@ Servers expose `/.well-known/agent-configuration`:
 pnpm install
 pnpm build
 pnpm test
+
+# Run the relay locally
+cd apps/relay && cp .env.example .env && pnpm dev
 ```
 
-## Skills
+## Environment Variables
 
-AI coding agents can use the CAAP skill:
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes | Clerk publishable key (relaxing-collie-65) |
+| `CLERK_SECRET_KEY` | Yes | Clerk secret key |
+| `CLERK_JWT_KEY` | No | Clerk RSA public key (for offline JWT verification in TEE) |
+| `HELIUS_API_KEY` | Yes | Helius RPC/DAS API key |
+| `CLAWD_TOKEN_ADDRESS` | No | CLAWD mint (defaults to `8cHz...pump`) |
+| `DSTACK_SIMULATOR_ENDPOINT` | No | Phala tappd endpoint (default: `http://localhost:8090`) |
+| `RELAY_DOMAIN` | No | Relay hostname for SIWS messages (default: `relay.clawd.xyz`) |
 
-```bash
-npx skills add caap
-# or reference skills/caap.md directly
-```
-
-## Live Demo
-
-[x402.wtf/agentauth](https://x402.wtf/agentauth) — interactive SIWS demo, protocol overview, and whitepaper.
+---
 
 ## License
 
@@ -171,4 +345,6 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-Built by [Clawd Labs](https://x402.wtf) · Powered by [Helius](https://helius.dev), [Metaplex](https://metaplex.com), [Better Auth](https://better-auth.com)
+Built by [Clawd Labs](https://x402.wtf) · Powered by [Helius](https://helius.dev) · [Metaplex](https://metaplex.com) · [Clerk](https://clerk.com) · [Phala Network](https://phala.network) · [Better Auth](https://better-auth.com)
+
+Discoverable at [pay.sh/services/auth/agent](https://pay.sh/services/auth/agent)
