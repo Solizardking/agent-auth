@@ -384,9 +384,21 @@ cd apps/relay && cp .env.example .env && pnpm dev
 
 ---
 
-## Skill Catalog
+## Skill Catalog & Registry
 
-This project is registered in the **[Clawd Skill Hub](https://x402.wtf/skills)** as `pay-sh` — discoverable by AI agents and human developers browsing the Solana agent ecosystem.
+### Solana Pay Skills Registry
+
+This project is registered in the **[solana-foundation/pay](https://github.com/solana-foundation/pay)** skills registry via [PR #376](https://github.com/solana-foundation/pay/pull/376). Three files document the full CAAP/1.0 protocol:
+
+| File | Purpose |
+|------|---------|
+| [`skills/agent-auth/SKILL.md`](https://github.com/Solizardking/pay/blob/main/skills/agent-auth/SKILL.md) | Main skill listing — frontmatter, endpoints, protocol phases, Clerk integration, TEE fields, best practices |
+| [`skills/agent-auth/references/attestation-flow.md`](https://github.com/Solizardking/pay/blob/main/skills/agent-auth/references/attestation-flow.md) | Step-by-step attestation guide (SIWS-only, Clerk-bridged, status check, TEE health) |
+| [`skills/agent-auth/references/subscription-tiers.md`](https://github.com/Solizardking/pay/blob/main/skills/agent-auth/references/subscription-tiers.md) | Tier thresholds, features per tier, SDK computation, relay API format, tier gating |
+
+### Clawd Skill Hub
+
+This project is also registered in the **[Clawd Skill Hub](https://x402.wtf/skills)** as `pay-sh` — discoverable by AI agents and human developers browsing the Solana agent ecosystem.
 
 | Catalog File | Description |
 |-------------|-------------|
@@ -395,11 +407,42 @@ This project is registered in the **[Clawd Skill Hub](https://x402.wtf/skills)**
 | `public/api/skills/index.json` | Index entry with tags, URL, homepage, and attestation metadata |
 | [`packages/clerk-caap/SKILL.md`](packages/clerk-caap/SKILL.md) | Standalone `@clawd/clerk-caap` package skill reference |
 
+### Package Skill Docs
+
+Each package includes a detailed `SKILL.md` for AI agent context:
+
+| Package | Skill Doc | Lines |
+|---------|-----------|-------|
+| `@clawd/agent-auth-solana` | [`packages/agent-auth-solana/SKILL.md`](packages/agent-auth-solana/SKILL.md) | ~440 — protocol phases, TEE architecture, troubleshooting |
+| `@clawd/clerk-caap` | [`packages/clerk-caap/SKILL.md`](packages/clerk-caap/SKILL.md) | ~320 — Clerk+CAAP bridge, middleware, client integration |
+
 The skill hub powers agent-native discovery: any AI agent with Clawd tooling can find the **pay.sh Agent Auth** service and call it directly — no prior registration required.
 
 **Skill URL:** `https://x402.wtf/api/skills/pay-sh`  
+**Pay Skills Registry:** `skills/agent-auth/` ([PR #376](https://github.com/solana-foundation/pay/pull/376))  
 **Homepage:** `https://pay.sh/services/auth/agent`  
 **Category:** Solana / Blockchain
+
+---
+
+## Contributing
+
+### PR Status
+
+| PR | Repo | Status |
+|----|------|--------|
+| [#376](https://github.com/solana-foundation/pay/pull/376) | `solana-foundation/pay` | Open — `feat: add agent-auth skill with CAAP/1.0 attestation, SIWS, and TEE reference docs` |
+
+### Development
+
+```bash
+pnpm install
+pnpm build
+pnpm test
+
+# Run the relay locally
+cd apps/relay && cp .env.example .env && pnpm dev
+```
 
 ---
 
