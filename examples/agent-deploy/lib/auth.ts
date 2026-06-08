@@ -182,6 +182,13 @@ export const auth = betterAuth({
     enabled: true,
   },
   plugins: [
+    siws(),
+    createCaapPlugin({
+      heliusApiKey: process.env.HELIUS_API_KEY ?? "",
+      clawdMint: "8cHzQHUS2s2h8TzCmfqPKYiM4dSt4roa3n7MyRLApump",
+      enableSubscriptionTiers: true,
+      enableDasAttestation: true,
+    }),
     agentAuth({
       providerName: "Agent Deploy",
       freshSessionWindow: 0,

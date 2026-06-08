@@ -44,6 +44,7 @@ export const auth = betterAuth({
     }),
   },
   plugins: [
+    siws(),
     jwt(),
     oauthProvider({
       loginPage: "/sign-in",

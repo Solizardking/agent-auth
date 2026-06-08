@@ -542,6 +542,7 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    siws(),
     genericOAuth({
       config: [
         {

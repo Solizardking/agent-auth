@@ -33,6 +33,47 @@ export default function SignInPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  async function handleSiws() {
+    type PhantomProvider = {
+      connect: () => Promise<{ publicKey: { toBase58: () => string } }>;
+      signMessage: (m: Uint8Array, enc: string) => Promise<{ signature: Uint8Array }>;
+    };
+    const provider = (window as unknown as { solana?: PhantomProvider }).solana;
+    if (!provider) {
+      setError("Phantom wallet not found. Install Phantom to continue.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const { publicKey } = await provider.connect();
+      const address = publicKey.toBase58();
+      const nonce = Math.random().toString(36).slice(2, 18);
+      const message = `Sign in to Agent Deploy\n\nAddress: ${address}\nNonce: ${nonce}\nIssued At: ${new Date().toISOString()}`;
+      const { signature } = await provider.signMessage(new TextEncoder().encode(message), "utf8");
+      const res = await fetch("/api/auth/sign-in/siws", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          address,
+          signature: btoa(String.fromCharCode(...signature)),
+          message,
+          nonce,
+        }),
+      });
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { message?: string };
+        setError(err.message ?? "SIWS sign-in failed");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "SIWS sign-in failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (!isPending && session) {
       router.replace("/dashboard");

@@ -157,6 +157,7 @@ export const auth = betterAuth({
     schema,
   }),
   plugins: [
+    siws(),
     genericOAuth({
       config: [
         {

@@ -1,6 +1,6 @@
 import { AlertCircle, ExternalLink, Loader2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BetterAuthLogo } from "@/components/icons/logo";
+import { ClawdLogo } from "@/components/icons/logo";
 import { Button } from "@/components/ui/button";
 import { storage } from "@/lib/storage";
 import type { User } from "@/lib/types";
@@ -126,9 +126,9 @@ export function SignIn({
   return (
     <div className="flex flex-col items-center justify-center h-screen px-8 py-10">
       <div className="mb-5 flex flex-col items-center gap-2">
-        <BetterAuthLogo className="h-6 w-auto" />
+        <ClawdLogo className="h-8 w-8" />
         <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground select-none">
-          Better-Auth.
+          Clawd · Solana Agent Auth
         </span>
       </div>
 
@@ -160,7 +160,6 @@ export function SignIn({
                 value={idpUrl}
                 onChange={(e) => setIdpUrl(e.target.value)}
                 className="flex h-9 w-full rounded-sm border border-input bg-background px-3 text-xs placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-ring transition-colors"
-                autoFocus
               />
             </div>
             <Button type="submit" className="w-full">

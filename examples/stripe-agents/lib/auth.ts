@@ -106,6 +106,7 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    siws(),
     agentAuth({
       providerName: "Stripe Agents",
       providerDescription:

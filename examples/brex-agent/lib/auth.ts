@@ -114,6 +114,7 @@ export const auth = betterAuth({
     enabled: true,
   },
   plugins: [
+    siws(),
     agentAuth({
       providerName: "Brex Agent",
       providerDescription:
