@@ -2,6 +2,7 @@ import { agentAuth } from "@better-auth/agent-auth";
 import type { Capability } from "@better-auth/agent-auth";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { siws } from "better-auth-solana";
 import { Credential } from "mppx";
 import Stripe from "stripe";
 import { db, schema } from "./db";

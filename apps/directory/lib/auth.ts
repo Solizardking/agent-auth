@@ -3,6 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware } from "better-auth/api";
 import { jwt } from "better-auth/plugins";
 import { oauthProvider } from "@better-auth/oauth-provider";
+import { siws } from "better-auth-solana";
 import { db } from "./db";
 import * as schema from "./db/schema";
 import { normalizeLoopbackUri } from "./loopback";

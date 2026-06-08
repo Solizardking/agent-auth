@@ -2,6 +2,7 @@ import { agentAuth } from "@better-auth/agent-auth";
 import { createFromOpenAPI } from "@better-auth/agent-auth/openapi";
 import { passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
+import { siws } from "better-auth-solana";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { genericOAuth, anonymous } from "better-auth/plugins";
 import {

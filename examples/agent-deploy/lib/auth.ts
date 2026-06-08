@@ -1,8 +1,10 @@
 import { agentAuth } from "@better-auth/agent-auth";
 import type { Capability } from "@better-auth/agent-auth";
+import { createCaapPlugin } from "@clawd/agent-auth-solana";
 import { eq } from "drizzle-orm";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { siws } from "better-auth-solana";
 import {
   db,
   schema,

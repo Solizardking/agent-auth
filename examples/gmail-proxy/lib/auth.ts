@@ -4,6 +4,7 @@ import { passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { genericOAuth, anonymous } from "better-auth/plugins";
+import { siws } from "better-auth-solana";
 import { db } from "./db/index";
 import * as schema from "./db/schema";
 import { getSetting, insertLog } from "./db";

@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@auth/agent": "workspace:*",
+    "@clawd/agent-auth-solana": "workspace:*",
+    "better-auth-solana": "^1.0.0",
     "@better-auth/oauth-provider": "1.6.2",
     "@huggingface/transformers": "^3.8.1",
     "@modelcontextprotocol/sdk": "^1.27.1",

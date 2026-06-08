@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@better-auth/agent-auth": "workspace:*",
+    "@clawd/agent-auth-solana": "workspace:*",
+    "better-auth-solana": "^1.0.0",
     "@better-auth/passkey": "1.5.4",
     "@simplewebauthn/browser": "^13.3.0",
     "better-auth": "1.5.4",

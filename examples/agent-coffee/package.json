@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@better-auth/agent-auth": "workspace:*",
+    "@clawd/agent-auth-solana": "workspace:*",
+    "better-auth-solana": "^1.0.0",
     "@neondatabase/serverless": "^1.0.2",
     "better-auth": "1.5.4",
     "class-variance-authority": "^0.7.1",

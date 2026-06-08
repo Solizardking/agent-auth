@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@better-auth/agent-auth": "workspace:*",
+    "@clawd/agent-auth-solana": "workspace:*",
+    "better-auth-solana": "^1.0.0",
     "@neondatabase/serverless": "^1.0.2",
     "@stripe/react-stripe-js": "^3.0.0",
     "@stripe/stripe-js": "^5.0.0",
