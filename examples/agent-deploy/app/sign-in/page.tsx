@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn, useSession } from "@/lib/auth-client";
+import { useEffect, useState } from "react";
 import { AgentAuthLogo } from "@/components/icons/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { signIn, useSession } from "@/lib/auth-client";
 
 const FEATURES = [
   {
@@ -32,6 +32,38 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isPending && session) {
+      router.replace("/dashboard");
+    }
+  }, [session, isPending, router]);
+
+  if (isPending || session) {
+    return (
+      <div className="min-h-dvh flex items-center justify-center">
+        <div className="h-4 w-4 rounded-full border-2 border-foreground/10 border-t-foreground/60 animate-spin" />
+      </div>
+    );
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const result = await signIn.email({ email, password });
+      if (result.error) {
+        setError(result.error.message ?? "Invalid credentials");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch {
+      setError("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSiws() {
     type PhantomProvider = {
@@ -74,44 +106,12 @@ export default function SignInPage() {
     }
   }
 
-  useEffect(() => {
-    if (!isPending && session) {
-      router.replace("/dashboard");
-    }
-  }, [session, isPending, router]);
-
-  if (isPending || session) {
-    return (
-      <div className="min-h-dvh flex items-center justify-center">
-        <div className="h-4 w-4 rounded-full border-2 border-foreground/10 border-t-foreground/60 animate-spin" />
-      </div>
-    );
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const result = await signIn.email({ email, password });
-      if (result.error) {
-        setError(result.error.message ?? "Invalid credentials");
-      } else {
-        router.push("/dashboard");
-      }
-    } catch {
-      setError("Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
     <div className="min-h-dvh flex">
       <div className="hidden lg:flex lg:w-[460px] xl:w-[520px] shrink-0 flex-col justify-between bg-foreground text-background p-10">
         <div>
           <div className="flex items-center gap-2">
-            <AgentAuthLogo className="h-[14px] w-auto invert dark:invert-0" />
+            <AgentAuthLogo className="h-3.5 w-auto invert dark:invert-0" />
             <svg
               width="14"
               height="14"
@@ -120,6 +120,7 @@ export default function SignInPage() {
               stroke="currentColor"
               strokeWidth="1.5"
               className="opacity-30"
+              aria-hidden="true"
             >
               <path d="M9 5l7 7-7 7" />
             </svg>
@@ -153,6 +154,7 @@ export default function SignInPage() {
                     strokeWidth="3"
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                    aria-hidden="true"
                   >
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
@@ -191,7 +193,7 @@ export default function SignInPage() {
       <div className="flex-1 flex flex-col">
         <div className="flex items-center justify-between px-6 h-14">
           <div className="lg:hidden flex items-center gap-2">
-            <AgentAuthLogo className="h-[14px] w-auto" />
+            <AgentAuthLogo className="h-3.5 w-auto" />
             <svg
               width="14"
               height="14"
@@ -200,6 +202,7 @@ export default function SignInPage() {
               stroke="currentColor"
               strokeWidth="1.5"
               className="text-foreground/20"
+              aria-hidden="true"
             >
               <path d="M9 5l7 7-7 7" />
             </svg>
@@ -222,8 +225,8 @@ export default function SignInPage() {
                 </p>
               </div>
 
-              <div className="lg:hidden flex items-center gap-2.5 p-3 rounded-md border border-border bg-foreground/[0.02]">
-                <div className="h-7 w-7 rounded-md bg-foreground/[0.05] flex items-center justify-center shrink-0">
+              <div className="lg:hidden flex items-center gap-2.5 p-3 rounded-md border border-border bg-foreground/2">
+                <div className="h-7 w-7 rounded-md bg-foreground/5 flex items-center justify-center shrink-0">
                   <svg
                     width="12"
                     height="12"
@@ -234,6 +237,7 @@ export default function SignInPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     className="text-foreground/35"
+                    aria-hidden="true"
                   >
                     <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                   </svg>
@@ -246,29 +250,37 @@ export default function SignInPage() {
 
               <form onSubmit={handleSubmit} className="space-y-3.5">
                 <div className="space-y-1.5">
-                  <label className="text-[12px] font-medium text-foreground/50 uppercase tracking-wider">
+                  <label
+                    htmlFor="email"
+                    className="text-[12px] font-medium text-foreground/50 uppercase tracking-wider"
+                  >
                     Email
                   </label>
                   <input
+                    id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full px-3 py-2 rounded-md bg-background border border-border placeholder:text-foreground/25 focus:border-foreground/20 focus:ring-1 focus:ring-foreground/[0.08] text-[13px] outline-none transition-all"
+                    className="w-full px-3 py-2 rounded-md bg-background border border-border placeholder:text-foreground/25 focus:border-foreground/20 focus:ring-1 focus:ring-foreground/8 text-[13px] outline-none transition-all"
                     placeholder="you@example.com"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[12px] font-medium text-foreground/50 uppercase tracking-wider">
+                  <label
+                    htmlFor="password"
+                    className="text-[12px] font-medium text-foreground/50 uppercase tracking-wider"
+                  >
                     Password
                   </label>
                   <input
+                    id="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="w-full px-3 py-2 rounded-md bg-background border border-border placeholder:text-foreground/25 focus:border-foreground/20 focus:ring-1 focus:ring-foreground/[0.08] text-[13px] outline-none transition-all"
+                    className="w-full px-3 py-2 rounded-md bg-background border border-border placeholder:text-foreground/25 focus:border-foreground/20 focus:ring-1 focus:ring-foreground/8 text-[13px] outline-none transition-all"
                     placeholder="Your password"
                   />
                 </div>
@@ -287,6 +299,36 @@ export default function SignInPage() {
                   {loading ? "Signing in..." : "Sign In"}
                 </button>
               </form>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-[11px]">
+                  <span className="px-2 bg-background text-foreground/30">or</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSiws}
+                disabled={loading}
+                className="w-full py-2 text-[13px] font-medium rounded-md border border-[#9945FF]/40 text-[#9945FF] hover:bg-[#9945FF]/5 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <svg width="14" height="14" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                  <title>Solana</title>
+                  <circle cx="16" cy="16" r="15" stroke="#9945FF" strokeWidth="2" />
+                  <path
+                    d="M8 20 L12 12 L16 18 L20 10 L24 20"
+                    stroke="#14F195"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                  />
+                </svg>
+                Connect Solana Wallet
+              </button>
 
               <p className="text-center text-[13px] text-foreground/35">
                 Don&apos;t have an account?{" "}
