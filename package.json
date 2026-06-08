@@ -1,6 +1,6 @@
 {
-  "name": "clawd-agent-auth",
-  "version": "0.1.0",
+  "name": "agent-auth-ba",
+  "version": "0.6.0",
   "private": true,
   "license": "MIT",
   "scripts": {

@@ -21,9 +21,20 @@ const VERCEL_MCP_RESOURCE = "https://mcp.vercel.com/";
 const VERCEL_MCP_CLIENT_ID = process.env.VERCEL_MCP_CLIENT_ID as string;
 const VERCEL_MCP_REDIRECT_URI = `${process.env.BETTER_AUTH_URL}/callback`;
 const VERCEL_MASTER_API_KEY = process.env.VERCEL_MASTER_API_KEY as string;
+const EMPTY_VERCEL_SPEC = {
+  openapi: "3.0.0",
+  info: {
+    title: "Vercel Proxy",
+    description: "Offline fallback spec used when the live Vercel OpenAPI document is unavailable.",
+  },
+  paths: {},
+};
+
 const [vercelSpec] = await Promise.all([
-  fetch(VERCEL_OPENAPI_URL).then((r) => r.json()),
-  ensureSettings(),
+  fetch(VERCEL_OPENAPI_URL)
+    .then((r) => (r.ok ? r.json() : EMPTY_VERCEL_SPEC))
+    .catch(() => EMPTY_VERCEL_SPEC),
+  ensureSettings().catch(() => undefined),
 ]);
 
 const { onExecute: openapiOnExecute, ...openapiRest } = createFromOpenAPI(vercelSpec, {

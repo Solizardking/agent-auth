@@ -1,11 +1,13 @@
 node_modules/
 dist/
-.next/
 .turbo/
-*.tgz
+.next/
+
+*.tsbuildinfo
+
 .env
-.env.local
-.DS_Store
+.env.*
+!.env.example
+
 *.log
-# never commit a real .npmrc with token values
-.npmrc.local
+.vercel
