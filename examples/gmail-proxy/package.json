@@ -16,9 +16,9 @@
     "better-auth-solana": "^1.0.0",
     "@better-auth/passkey": "1.5.4",
     "@simplewebauthn/browser": "^13.3.0",
-    "better-auth": "1.5.4",
+    "better-auth": "1.6.13",
     "drizzle-orm": "^0.44.2",
-    "next": "16.1.6",
+    "next": "16.2.6",
     "postgres": "^3.4.5",
     "react": "19.2.3",
     "react-dom": "19.2.3"
