@@ -19,6 +19,7 @@ describe("package publish entry points (structural)", () => {
     expect(pkg.main).toMatch(/^\.\/dist\//);
     expect(pkg.types).toMatch(/^\.\/dist\//);
     expect(pkg.files).toContain("dist");
+    expect(pkg.files).toContain("LICENSE");
     expect(pkg.files).not.toContain("src");
 
     for (const [subpath, entry] of Object.entries(pkg.exports)) {

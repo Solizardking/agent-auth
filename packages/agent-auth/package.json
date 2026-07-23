@@ -5,11 +5,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/better-auth/agent-auth",
+    "url": "git+https://github.com/better-auth/agent-auth.git",
     "directory": "packages/agent-auth"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "type": "module",
   "main": "./dist/index.js",
@@ -59,5 +60,8 @@
   "peerDependencies": {
     "@better-auth/core": ">=1.4.0",
     "better-auth": ">=1.4.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
