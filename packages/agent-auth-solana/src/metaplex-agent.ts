@@ -6,7 +6,9 @@ import {
   createUmi,
 } from "@metaplex-foundation/umi-bundle-defaults";
 import {
+  createSignerFromKeypair,
   publicKey,
+  signerIdentity,
   type Umi,
 } from "@metaplex-foundation/umi";
 import {
@@ -103,11 +105,8 @@ function createUmiInstance(config?: UmiConfig): Umi {
     const keypair = umi.eddsa.createKeypairFromSecretKey(
       config.signer.secretKey,
     );
-    umi = umi.use({
-      async install(context) {
-        context.payer = keypair;
-      },
-    });
+    const signer = createSignerFromKeypair(umi, keypair);
+    umi = umi.use(signerIdentity(signer));
   }
 
   return umi;
@@ -140,7 +139,7 @@ export async function registerAgent(
     collection: collectionPublicKey,
     name: "",
     uri: agentRegistrationUri,
-    identityPda: identityPda.toString(),
+    identityPda: publicKey(identityPda).toString(),
   };
 }
 
@@ -149,19 +148,20 @@ export async function registerExecutive(
   config?: UmiConfig,
 ): Promise<ExecutiveProfileInfo> {
   const umi = createUmiInstance(config);
-  const authority = authorityPublicKey
-    ? publicKey(authorityPublicKey)
-    : umi.payer.publicKey;
-
+  // Instruction `authority` is a Signer; default to the Umi identity when
+  // no explicit pubkey is supplied for PDA derivation only.
   await registerExecutiveV1(umi, {
-    authority,
+    authority: umi.identity,
   }).sendAndConfirm(umi);
 
+  const authority = authorityPublicKey
+    ? publicKey(authorityPublicKey)
+    : umi.identity.publicKey;
   const profilePda = findExecutiveProfileV1Pda(umi, { authority });
 
   return {
     authority: authority.toString(),
-    profilePda: profilePda.toString(),
+    profilePda: publicKey(profilePda).toString(),
   };
 }
 
@@ -184,15 +184,16 @@ export async function delegateAgentExecution(
     executiveProfile,
   }).sendAndConfirm(umi);
 
+  const executiveProfileKey = publicKey(executiveProfile);
   const delegateRecord = findExecutionDelegateRecordV1Pda(umi, {
-    executiveProfile,
+    executiveProfile: executiveProfileKey,
     agentAsset,
   });
 
   return {
     agentAsset: agentAssetPublicKey,
     executiveAuthority: executiveAuthorityPublicKey,
-    delegateRecordPda: delegateRecord.toString(),
+    delegateRecordPda: publicKey(delegateRecord).toString(),
     exists: true,
   };
 }
@@ -235,14 +236,15 @@ export async function findAgentsByOwner(
     const id = asset.id;
     if (!id) continue;
     const identityPda = findAgentIdentityV1Pda(umi, { asset: publicKey(id) });
-    const accountInfo = await umi.rpc.getAccount(identityPda).catch(() => null);
+    const identityKey = publicKey(identityPda);
+    const accountInfo = await umi.rpc.getAccount(identityKey).catch(() => null);
     if (!accountInfo?.exists) continue;
     agents.push({
       asset: id,
       collection: asset.grouping?.[0]?.group_value ?? "",
       name: asset.content?.metadata?.name ?? "",
       uri: asset.content?.metadata?.uri ?? "",
-      identityPda: identityPda.toString(),
+      identityPda: identityKey.toString(),
     });
   }
   return agents;
@@ -256,8 +258,9 @@ export async function verifyAgentIdentity(
     const umi = createUmiInstance(config);
     const asset = publicKey(agentAssetPublicKey);
     const identityPda = findAgentIdentityV1Pda(umi, { asset });
-    const account = await umi.rpc.getAccount(identityPda);
-    return { verified: account.exists, identityPda: identityPda.toString() };
+    const identityKey = publicKey(identityPda);
+    const account = await umi.rpc.getAccount(identityKey);
+    return { verified: account.exists, identityPda: identityKey.toString() };
   } catch {
     return { verified: false };
   }
@@ -273,14 +276,16 @@ export async function checkExecutionDelegation(
     const executiveProfile = findExecutiveProfileV1Pda(umi, {
       authority: publicKey(executiveAuthorityPublicKey),
     });
+    const executiveProfileKey = publicKey(executiveProfile);
     const delegateRecord = findExecutionDelegateRecordV1Pda(umi, {
-      executiveProfile,
+      executiveProfile: executiveProfileKey,
       agentAsset: publicKey(agentAssetPublicKey),
     });
-    const account = await umi.rpc.getAccount(delegateRecord);
+    const delegateKey = publicKey(delegateRecord);
+    const account = await umi.rpc.getAccount(delegateKey);
     return {
       delegated: account.exists,
-      delegateRecordPda: delegateRecord.toString(),
+      delegateRecordPda: delegateKey.toString(),
     };
   } catch {
     return { delegated: false };
