@@ -2,25 +2,83 @@
   "name": "@clawd/agent-auth-solana",
   "version": "0.1.0",
   "description": "Solana agent auth — SIWS, DAS attestation, and subscription tiers for Clawd agents",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/better-auth/agent-auth",
+    "directory": "packages/agent-auth-solana"
+  },
+  "keywords": [
+    "solana",
+    "agent-auth",
+    "siws",
+    "better-auth",
+    "clawd"
+  ],
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./client": "./src/client.ts",
-    "./verify": "./src/verify.ts"
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./client": {
+      "import": {
+        "types": "./dist/client.d.ts",
+        "default": "./dist/client.js"
+      }
+    },
+    "./verify": {
+      "import": {
+        "types": "./dist/verify.d.ts",
+        "default": "./dist/verify.js"
+      }
+    }
   },
-  "keywords": ["solana", "agent-auth", "siws", "better-auth", "clawd"],
-  "license": "MIT",
-  "peerDependencies": {
-    "better-auth": ">=1.5.0",
-    "better-auth-solana": ">=1.0.0"
-  },
-  "devDependencies": {
-    "typescript": "^5.0.0"
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "bs58": "^5.0.0",
     "tweetnacl": "^1.0.3"
+  },
+  "peerDependencies": {
+    "@metaplex-foundation/mpl-agent-registry": ">=0.2.0",
+    "@metaplex-foundation/umi": ">=1.0.0",
+    "@metaplex-foundation/umi-bundle-defaults": ">=1.0.0",
+    "better-auth": ">=1.5.0",
+    "better-auth-solana": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@metaplex-foundation/mpl-agent-registry": {
+      "optional": true
+    },
+    "@metaplex-foundation/umi": {
+      "optional": true
+    },
+    "@metaplex-foundation/umi-bundle-defaults": {
+      "optional": true
+    },
+    "better-auth": {
+      "optional": true
+    },
+    "better-auth-solana": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.8.0",
+    "vitest": "^4.0.18"
   }
 }

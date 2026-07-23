@@ -6,7 +6,7 @@
   "scripts": {
     "build": "turbo build",
     "typecheck": "turbo typecheck",
-    "bump": "bumpp packages/agent-auth/package.json packages/sdk/package.json packages/cli/package.json package.json",
+    "bump": "bumpp packages/agent-auth/package.json packages/sdk/package.json packages/cli/package.json packages/agent-auth-solana/package.json package.json",
     "test": "turbo test",
     "fmt": "oxfmt .",
     "fmt:check": "oxfmt --check ."
