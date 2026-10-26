@@ -4,6 +4,18 @@ Open-source implementations of the **[Agent Auth Protocol](https://agent-auth-pr
 
 Agents discover your service, register with a cryptographic identity, request capabilities, and execute them. Sensitive actions stay behind user approval. Solana wallets are first-class identities.
 
+## Live provider — Musebook
+
+[**Musebook**](https://musebook.trade) runs a production Agent Auth provider: SIWS sign-in, Ed25519 agent registration, device-code approval, and scoped capability execution (directory registration, API keys, feed posts, wallet linking) — browser-signing only, the server never signs on your behalf.
+
+```bash
+curl https://musebook.trade/.well-known/agent-configuration
+```
+
+- Provider profile: [`examples/musebook/`](examples/musebook/)
+- Directory listing: https://agent-auth.directory/providers/musebook
+- Registry: https://registry.musebook.trade/agent-auth
+
 ---
 
 ## Solana Extension — `@clawd/agent-auth-solana`
